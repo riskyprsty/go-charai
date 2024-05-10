@@ -82,6 +82,31 @@ func getAiParticipant(context *gin.Context) {
 
 }
 
+func getAiProfileImage(context *gin.Context) {
+	character := context.Query("charid")
+
+	charInfo, errInfo := caiClient.Character.Info(character, token)
+
+	if errInfo != nil {
+		fmt.Println("[x] Unable to get character profile image info")
+		var messages = []Message{
+			{Status: "false", Body: errInfo.Error()},
+		}
+
+		context.IndentedJSON(http.StatusOK, messages)
+	}
+
+	characterMap := charInfo["character"].(map[string]interface{})
+	avatarImage := characterMap["avatar_file_name"].(string)
+
+	var messages = []Message{
+		{Status: "success", Body: avatarImage},
+	}
+
+	context.IndentedJSON(http.StatusOK, messages)
+
+}
+
 func getMessage(context *gin.Context) {
 	character := context.Query("charid")
 	message := context.Query("body")
@@ -136,6 +161,7 @@ func main() {
 
 	router.GET("/test", getTestMessage)
 	router.GET("/ai", getAiParticipant)
+	router.GET("/image", getAiProfileImage)
 	router.GET("/message", getMessage)
 	router.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
